@@ -1,0 +1,36 @@
+html, body, #body2
+{
+    height: 100%;
+    min-height: 100%;
+    align-items: center;
+
+}
+
+#chessboard {
+    height: 600px;
+    width: 600px;
+    table-layout: fixed;
+}
+
+#chessboard, tr, td {
+    border: 1px solid black;
+  border-collapse: collapse;
+  opacity: 0.7;
+  text-align : center;
+
+
+}
+
+.cell {
+    display: table-cell;
+    width: 12.4%; 
+    height: 12.4%; 
+
+    border-collapse: collapse;
+    text-align : center;
+    border : 1px solid black;
+    font-family : Arial, Helvetica, sans-serif;
+    font-size : 2rem;
+    font-weight: bold;
+
+}
