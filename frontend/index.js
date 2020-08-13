@@ -130,7 +130,7 @@ function movefigure(id){
 turn+=1;
 
 refigureboard();
-computermove();
+computermove(3);
 
     } else {
       if (turn%2==0) {
@@ -151,7 +151,7 @@ currentfiguretomove=[document.getElementById(id).innerText, parseInt(id.substrin
 }
 
 
-function evaluatemove(x,y) {
+function evaluatemove(x,y,lookahead) {
 
   if (turn%2==0) {
     lista=whitelist;
@@ -216,7 +216,7 @@ return blackvalue-whitevalue;
 }
 
 
-function computermove()  {
+function computermove(lookahead)  {
 
   let lista= null;
   let listb= null;
@@ -241,21 +241,28 @@ var waspawn = false;
 
         if (moveispossible(element[0],element[1],element[2],x,y)){  
           
+          let currentpositionx=element[1];
+          let currentpositiony=element[2];
+          element[1]=x;
+          element[2]=y;
+
           if (element[0]==="B" && x==7) {
             element[0]="D";
             waspawn=true;
          }
      
-          if(evaluatemove(x,y)>bestcomputermoveval){
-            console.log("derzeit bester move"+bestcomputermoveval);
-            console.log("neuer bester move"+evaluatemove(x,y));
+          if(evaluatemove(x,y,lookahead)>bestcomputermoveval){
+        //    console.log("derzeit bester move"+bestcomputermoveval);
+        //    console.log("neuer bester move"+evaluatemove(x,y));
             bestcomputermoveval=evaluatemove(x,y);
-            currentbestfigure = [element[1],element[2],x,y];
+            currentbestfigure = [currentpositionx,currentpositiony,x,y];
           }
           if (waspawn==true) {
             waspawn=false;
             element[0]="B";
           }
+          element[1]=currentpositionx;
+          element[2]=currentpositiony;
         }
       }
     }
@@ -274,6 +281,7 @@ lista.forEach(element => {
   }
 });
 document.getElementById(""+currentbestfigure[0]+currentbestfigure[1]).innerText=null;
+
 
 let figurekilled=-1;
 let figurekilledcounter=0;
@@ -402,24 +410,16 @@ if (type[0]=="B") {
   if (Math.abs(currentpositionx-x)==Math.abs(currentpositiony-y)&&!friendlyfigureonfield(x,y)) {
 
    let bool = true;
+   let moveinx = x-currentpositionx/Math.abs(currentpositionx-x);
+   let moveiny = y-currentpositiony/Math.abs(currentpositiony-y);
 
-   for (let z=1 ; z<x-currentpositionx ; z++) {
 
-  bool=bool&&!enemyfigureonfield(currentpositionx+z,currentpositiony+z)&&!friendlyfigureonfield(currentpositionx+z,currentpositiony+z);
+   for (let z=1 ; z<Math.abs(x-currentpositionx) ; z++) {
+
+  bool=bool&&!enemyfigureonfield(currentpositionx+z*moveinx,currentpositiony+z*moveiny)&&!friendlyfigureonfield(currentpositionx+z*moveinx,currentpositiony+z*moveinx);
   }
 
-  for (let z=1 ; z<currentpositionx-x ; z++) {
- 
-    bool=bool&&!enemyfigureonfield(x+z,y+z)&&!friendlyfigureonfield(x+z,y+z);
-    }
-  for (let z=1 ; z<x-currentpositiony ; z++) {
 
-    bool=bool&&!enemyfigureonfield(currentpositionx+z,currentpositiony+z)&&!friendlyfigureonfield(currentpositionx+z,currentpositiony+z);
-  }
-  for (let z=1 ; z<currentpositiony-x  ; z++)   {  
-
-    bool=bool&&!enemyfigureonfield(x+z,y+z)&&!friendlyfigureonfield(x+z,y+z);
-  }
 
     return bool;
   }
@@ -437,24 +437,15 @@ return false;
   if (Math.abs(currentpositionx-x)==Math.abs(currentpositiony-y)&&!friendlyfigureonfield(x,y)) {
 
     let bool = true;
+    let moveinx = x-currentpositionx/Math.abs(currentpositionx-x);
+    let moveiny = y-currentpositiony/Math.abs(currentpositiony-y);
  
-    for (let z=1 ; z<x-currentpositionx ; z++) {
  
-   bool=bool&&!enemyfigureonfield(currentpositionx+z,currentpositiony+z)&&!friendlyfigureonfield(currentpositionx+z,currentpositiony+z);
+    for (let z=1 ; z<Math.abs(x-currentpositionx) ; z++) {
+ 
+   bool=bool&&!enemyfigureonfield(currentpositionx+z*moveinx,currentpositiony+z*moveiny)&&!friendlyfigureonfield(currentpositionx+z*moveinx,currentpositiony+z*moveinx);
    }
  
-   for (let z=1 ; z<currentpositionx-x ; z++) {
-  
-     bool=bool&&!enemyfigureonfield(x+z,y+z)&&!friendlyfigureonfield(x+z,y+z);
-     }
-   for (let z=1 ; z<x-currentpositiony ; z++) {
- 
-     bool=bool&&!enemyfigureonfield(currentpositionx+z,currentpositiony+z)&&!friendlyfigureonfield(currentpositionx+z,currentpositiony+z);
-   }
-   for (let z=1 ; z<currentpositiony-x  ; z++)   {  
- 
-     bool=bool&&!enemyfigureonfield(x+z,y+z)&&!friendlyfigureonfield(x+z,y+z);
-   }
  
      return bool;
    } else if ((currentpositionx==x && currentpositiony!=y) || (currentpositionx!=x && currentpositiony==y)) {
