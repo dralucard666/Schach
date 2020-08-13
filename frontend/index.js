@@ -74,7 +74,6 @@ refigureboard();
 function refigureboard() {
 
 
-
 whitelist.forEach(element => {
   document.getElementById(arraynuminid(element[1],element[2])).innerText=element[0];
   document.getElementById(arraynuminid(element[1],element[2])).style.color = "#ff0000";
@@ -84,6 +83,7 @@ blacklist.forEach(element => {
   document.getElementById(arraynuminid(element[1],element[2])).innerText=element[0];
   document.getElementById(arraynuminid(element[1],element[2])).style.color = "blue";
 });
+
 }
 
 
@@ -93,7 +93,11 @@ function movefigure(id){
 
 
   if (currentfiguretomove!=null) {
+
+
     if (moveispossible(currentfiguretomove[0], currentfiguretomove[1], currentfiguretomove[2], parseInt(id.substring(0,1)),parseInt(id.substring(1,2)))) {
+
+
 
      whitelist.forEach(element => {
         if(element[1]==currentfiguretomove[1] && element[2]==currentfiguretomove[2]) {
@@ -105,6 +109,7 @@ function movefigure(id){
         }
       });
       document.getElementById(""+currentfiguretomove[1]+currentfiguretomove[2]).innerText=null;
+
       
      let figurekilled=-1;
      let figurekilledcounter=0;
@@ -130,7 +135,8 @@ function movefigure(id){
 turn+=1;
 
 refigureboard();
-computermove(3);
+
+computermove(1);
 
     } else {
       if (turn%2==0) {
@@ -142,77 +148,186 @@ computermove(3);
     }
 
 } else {
+
   if ((document.getElementById(id).style.color=="rgb(255, 0, 0)" && turn%2==0) || (document.getElementById(id).style.color=="blue" && turn%2==1)) {
   document.getElementById(id).style.color="green";
 currentfiguretomove=[document.getElementById(id).innerText, parseInt(id.substring(0,1)) ,parseInt(id.substring(1,2))];
+
+
+
   }
 }
 
 }
 
+function deleteinlist(list, x,y) {
 
-function evaluatemove(x,y,lookahead) {
+  let arrayposition=-1;
+  let counter=0;
+  let killedfiguretype;
+  let killedfigurex;
+  let killedfigurey;
+  list.forEach(element => {
+  
+    if(element[1]==x && element[2]==y) {
+      arrayposition=counter;
+    }
+    counter++;
+    });
+    if (arrayposition>-1) {
+      killedfiguretype=list[arrayposition][0];
+      killedfigurex=list[arrayposition][1];
+      killedfigurey=list[arrayposition][2];
+      list.splice(arrayposition,1)
+    }
+  
+    arrayposition=-1;  
+    if (killedfiguretype==null) {
+      return null
+    } else {
+
+    return [killedfiguretype,killedfigurex,killedfigurey]
+    }
+}
+
+
+function evaluateposition () {
+
+  let whitevalue=0;
+  let blackvalue=0;
+  
+    whitelist.forEach(element => {
+      if(element[0]=="B") {  whitevalue+=1  } 
+      else if (element[0]=="T") {  whitevalue+=5  }
+      else if (element[0]=="S") {   whitevalue+=3 }
+      else if (element[0]=="L") {  whitevalue+=3  }
+      else if (element[0]=="K") {  whitevalue+=39  }
+      else {whitevalue+=8}
+    });
+  
+    blacklist.forEach(element => {
+      if(element[0]=="B") {  blackvalue++  } 
+      else if (element[0]=="T") {  blackvalue+=5  }
+      else if (element[0]=="S") {   blackvalue+=3 }
+      else if (element[0]=="L") {  blackvalue+=3  }
+      else if (element[0]=="K") {  blackvalue+=39  }
+      else {blackvalue+=8}
+    });
+  
+    return blackvalue-whitevalue;
+}
+
+
+function backtrackallmoves(lookahead) {
+
+  let lineforpawntoreach;
 
   if (turn%2==0) {
     lista=whitelist;
     listb=blacklist;
+    lineforpawntoreach=0;
     } else {
     lista=blacklist;
     listb=whitelist;
+    lineforpawntoreach=7;
     }
-
-  let figurekilled=-1;
-  let figurekilledcounter=0;
-  let killedfiguretype= null;
-  let killedfigurex= null;
-  let killedfigurey= null;
-
-   
-  listb.forEach(element => {
-  
-    if(element[1]==x && element[2]==y) {
-      figurekilled=figurekilledcounter;
-    }
-    figurekilledcounter++;
-    });
-    if (figurekilled>-1) {
-      killedfiguretype=listb[figurekilled][0];
-      killedfigurex=listb[figurekilled][1];
-      killedfigurey=listb[figurekilled][2];
-      listb.splice(figurekilled,1)
-    }
-  
-    figurekilled=-1;  
+  let killedfigure=deleteinlist(listb,x,y);
 
 
+if (lookahead==1) {
 
-
-let whitevalue=0;
-let blackvalue=0;
-
-  listb.forEach(element => {
-    if(element[0]=="B") {  whitevalue+=1  } 
-    else if (element[0]=="T") {  whitevalue+=5  }
-    else if (element[0]=="S") {   whitevalue+=3 }
-    else if (element[0]=="L") {  whitevalue+=3  }
-    else if (element[0]=="K") {  whitevalue+=39  }
-    else {whitevalue+=8}
-  });
-
+  let bestcomputermoveval=-80;
+  let oldx;
+  let oldy;
+  let oldtype;
   lista.forEach(element => {
-    if(element[0]=="B") {  blackvalue++  } 
-    else if (element[0]=="T") {  blackvalue+=5  }
-    else if (element[0]=="S") {   blackvalue+=3 }
-    else if (element[0]=="L") {  blackvalue+=3  }
-    else if (element[0]=="K") {  blackvalue+=39  }
-    else {blackvalue+=8}
-  });
+    for (let x=0 ; x<8 ; x++) {
+      for (let y=0 ; y<8 ; y++) {
+        if (moveispossible(element[0],element[1],element[2],x,y)){  
+ 
+          let killedfigure=deleteinlist(listb,x,y);
 
-  if(killedfiguretype!=null) {
-listb.push([killedfiguretype,killedfigurex,killedfigurey])
-  }
+          oldtype=element[0]
+          oldx=element[1]
+          oldy=element[2]
+              element[1]=x;
+               element[2]=y;
+               if (element[0]==="B" && y==lineforpawntoreach) {
+                  element[0]="D";
+               }
+               turn++;
+               let value=evaluateposition()
+               turn--;
+     
+               if(killedfigure!=null) {
+                 listb.push([killedfigure[0],killedfigure[1],killedfigure[2]])
+                 killedfigure=null;
+                   }
+                         
+                 element[1]=oldx;
+                 element[2]=oldy;
+                 element[0]=oldtype;
+                 
+     
+               if(value>bestcomputermoveval){
 
-return blackvalue-whitevalue;
+
+                 bestcomputermoveval=value;
+               }
+              }
+        }
+      }
+      }
+   )
+    
+    return bestcomputermoveval;
+
+} else {
+
+  let bestcomputermoveval=-80;
+  let oldx;
+  let oldy;
+  let oldtype;
+  lista.forEach(element => {
+    for (let x=0 ; x<8 ; x++) {
+      for (let y=0 ; y<8 ; y++) {
+        if (moveispossible(element[0],element[1],element[2],x,y)){  
+ 
+          let killedfigure=deleteinlist(listb,x,y);
+
+          oldtype=element[0]
+          oldx=element[1]
+          oldy=element[2]
+              element[1]=x;
+               element[2]=y;
+               if (element[0]==="B" && y==lineforpawntoreach) {
+                  element[0]="D";
+               }
+               turn++;
+               let value=backtrackallmoves(lookahead-1)
+               turn--;
+     
+               if(killedfigure!=null) {
+                 listb.push([killedfigure[0],killedfigure[1],killedfigure[2]])
+                 killedfigure=null;
+                   }
+                         
+                 element[1]=oldx;
+                 element[2]=oldy;
+                 element[0]=oldtype;
+                 
+     
+               if(value>bestcomputermoveval){
+                 bestcomputermoveval=value;
+               }
+              }
+        }
+      }
+      }
+   )
+    
+    return bestcomputermoveval;
+}
 }
 
 
@@ -220,6 +335,10 @@ function computermove(lookahead)  {
 
   let lista= null;
   let listb= null;
+  let bestmoveoldx;
+  let bestmoveoldy;
+  let bestmovenewx;
+  let bestmovenewy;
 
 if (turn%2==0) {
 lista=whitelist;
@@ -229,82 +348,71 @@ lista=blacklist;
 listb=whitelist;
 }
 
-
-  var bestcomputermoveval=-80;
-var currentbestfigure = null;
-var waspawn = false;
-
+  let bestcomputermoveval=-80;
+  let oldx;
+  let oldy;
+  let oldtype;
+  let value;
   lista.forEach(element => {
     for (let x=0 ; x<8 ; x++) {
       for (let y=0 ; y<8 ; y++) {
-
-
         if (moveispossible(element[0],element[1],element[2],x,y)){  
           
-          let currentpositionx=element[1];
-          let currentpositiony=element[2];
-          element[1]=x;
-          element[2]=y;
+          let killedfigure=deleteinlist(listb,x,y);
 
-          if (element[0]==="B" && x==7) {
-            element[0]="D";
-            waspawn=true;
-         }
+
+          oldtype=element[0]
+          oldx=element[1]
+          oldy=element[2]
+              element[1]=x;
+               element[2]=y;
+               if (element[0]==="B" && y==7) {
+                  element[0]="D";
+               }
+               turn++;
+                value=evaluateposition()
+               turn--;
+               
      
-          if(evaluatemove(x,y,lookahead)>bestcomputermoveval){
-        //    console.log("derzeit bester move"+bestcomputermoveval);
-        //    console.log("neuer bester move"+evaluatemove(x,y));
-            bestcomputermoveval=evaluatemove(x,y);
-            currentbestfigure = [currentpositionx,currentpositiony,x,y];
-          }
-          if (waspawn==true) {
-            waspawn=false;
-            element[0]="B";
-          }
-          element[1]=currentpositionx;
-          element[2]=currentpositiony;
+               if(killedfigure!=null) {
+                 listb.push([killedfigure[0],killedfigure[1],killedfigure[2]])
+                 killedfigure=null;
+                   }
+                         
+                 element[1]=oldx;
+                 element[2]=oldy;
+                 element[0]=oldtype;
+                 
+     
+               if(value>bestcomputermoveval){
+                 bestcomputermoveval=value;
+                 bestmovenewx=x;
+                 bestmovenewy=y;
+                 bestmoveoldx=oldx;
+                 bestmoveoldy=oldy;
+               }   
+            }
         }
       }
-    }
-})
-
-
-
+      }
+   )
 
 lista.forEach(element => {
-  if(element[1]==currentbestfigure[0] && element[2]==currentbestfigure[1]) {
-    element[1]=currentbestfigure[2];
-     element[2]=currentbestfigure[3];
-     if (element[0]==="B" && currentbestfigure[2]==7) {
+  if(element[1]==bestmoveoldx && element[2]==bestmoveoldy) {
+    element[1]=bestmovenewx;
+     element[2]=bestmovenewy;
+     if (element[0]==="B" && bestmovenewx==7) {
       element[0]="D";
    }
   }
 });
-document.getElementById(""+currentbestfigure[0]+currentbestfigure[1]).innerText=null;
+document.getElementById(""+bestmoveoldx+bestmoveoldy).innerText=null;
 
 
-let figurekilled=-1;
-let figurekilledcounter=0;
-
-
-
-listb.forEach(element => {
-
-  if(element[1]==currentbestfigure[2] && element[2]==currentbestfigure[3]) {
-    figurekilled=figurekilledcounter;
-
-  }
-  figurekilledcounter++;
-  });
-  if (figurekilled>-1) {
-    listb.splice(figurekilled,1)
-  }
-
-  figurekilled=-1;
+let killedfigure=deleteinlist(listb,bestmovenewx,bestmovenewy);
 
 currentfiguretomove=null;
-turn+=1;
-
+turn=0;
 
 refigureboard();
 
@@ -410,8 +518,8 @@ if (type[0]=="B") {
   if (Math.abs(currentpositionx-x)==Math.abs(currentpositiony-y)&&!friendlyfigureonfield(x,y)) {
 
    let bool = true;
-   let moveinx = x-currentpositionx/Math.abs(currentpositionx-x);
-   let moveiny = y-currentpositiony/Math.abs(currentpositiony-y);
+   let moveinx = parseInt(x-currentpositionx)/parseInt(Math.abs(currentpositionx-x));
+   let moveiny = parseInt(y-currentpositiony)/parseInt(Math.abs(currentpositiony-y));
 
 
    for (let z=1 ; z<Math.abs(x-currentpositionx) ; z++) {
@@ -437,12 +545,16 @@ return false;
   if (Math.abs(currentpositionx-x)==Math.abs(currentpositiony-y)&&!friendlyfigureonfield(x,y)) {
 
     let bool = true;
-    let moveinx = x-currentpositionx/Math.abs(currentpositionx-x);
-    let moveiny = y-currentpositiony/Math.abs(currentpositiony-y);
- 
+    let moveinx = parseInt(x-currentpositionx)/parseInt(Math.abs(currentpositionx-x));
+    let moveiny = parseInt(y-currentpositiony)/parseInt(Math.abs(currentpositiony-y));
+  
+
+
+
+
  
     for (let z=1 ; z<Math.abs(x-currentpositionx) ; z++) {
- 
+ console.log(currentpositionx+z*moveinx+" , "+currentpositiony+z*moveiny)
    bool=bool&&!enemyfigureonfield(currentpositionx+z*moveinx,currentpositiony+z*moveiny)&&!friendlyfigureonfield(currentpositionx+z*moveinx,currentpositiony+z*moveinx);
    }
  
